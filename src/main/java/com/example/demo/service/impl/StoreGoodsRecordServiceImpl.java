@@ -87,14 +87,12 @@ public class StoreGoodsRecordServiceImpl extends ServiceImpl<StoreGoodsRecordDao
         List<StoreGoodsRecord> records = this.list(new QueryWrapper<StoreGoodsRecord>()
                 .eq(StoreGoodsRecordM.STORE_NO, query.getStoreNo())
                 .in(StoreGoodsRecordM.GOODS_NO, query.getGoodsNo()));
-        if (CollectionUtils.isEmpty(records)) {
-            return storeGoodsRecordVos;
-        }
-        records.forEach(p -> {
+        log.info("[按条件查询指定字段] 查询条数size：{}", records.size());
+        for (StoreGoodsRecord record : records) {
             StoreGoodsRecordVo storeGoodsRecordVo = new StoreGoodsRecordVo();
-            BeanUtils.copyProperties(p, storeGoodsRecordVo);
+            BeanUtils.copyProperties(record, storeGoodsRecordVo);
             storeGoodsRecordVos.add(storeGoodsRecordVo);
-        });
+        }
         return storeGoodsRecordVos;
     }
 
