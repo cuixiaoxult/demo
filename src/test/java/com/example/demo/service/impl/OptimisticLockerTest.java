@@ -56,7 +56,7 @@ class OptimisticLockerTest extends BaseTest {
     void getByFlag(){
         List<StoreGoodsRecord> storeGoodsRecords = storeGoodsRecordDao.getByFlag(16);
         log.info("查询个数size:{}",storeGoodsRecords.size());
-        Assert.assertEquals(1, storeGoodsRecords);
+        Assert.assertEquals(1, storeGoodsRecords.size());
     }
 
     @Test

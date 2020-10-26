@@ -29,9 +29,6 @@ public class GlobalResponseHandle implements ResponseBodyAdvice<Object> {
     @Override
     public Object beforeBodyWrite(Object body, MethodParameter methodParameter, MediaType mediaType, Class<? extends HttpMessageConverter<?>> aClass, ServerHttpRequest serverHttpRequest, ServerHttpResponse serverHttpResponse) {
         final String parameterTypeName = methodParameter.getParameterType().getName();
-        if ("void".equals(parameterTypeName)) {
-            return GlobalResponse.success(null);
-        }
         if (!mediaType.includes(MediaType.APPLICATION_JSON)) {
             return body;
         }
