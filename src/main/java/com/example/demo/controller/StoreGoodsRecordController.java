@@ -1,7 +1,7 @@
 
 package com.example.demo.controller;
 
-import com.example.demo.dto.StoreGoodsRecordDto;
+
 import com.example.demo.service.StoreGoodsRecordService;
 import com.example.demo.util.MyPage;
 import com.example.demo.vo.StoreGoodsRecordQueryVo;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
@@ -78,7 +77,7 @@ public class StoreGoodsRecordController {
      * 修改
      */
     @PutMapping(value = "/update")
-    public int updateStoreGoodsRecord( @RequestBody @Valid StoreGoodsRecordVo storeGoodsRecordVo){
+    public int updateStoreGoodsRecord(@RequestBody @Valid StoreGoodsRecordVo storeGoodsRecordVo) {
         return storeGoodsRecordService.updateStoreGoodsRecord(storeGoodsRecordVo);
     }
 
