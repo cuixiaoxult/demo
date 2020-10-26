@@ -10,12 +10,12 @@ import org.springframework.context.annotation.Configuration;
 /**
  * @author cui
  */
-@MapperScan("com.example.demo.dao")
 @Configuration
 public class MybatisPlusConfig {
 
     /**
      * 乐观锁配置
+     *
      * @return
      */
     @Bean
