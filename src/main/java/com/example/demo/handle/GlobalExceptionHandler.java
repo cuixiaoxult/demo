@@ -5,6 +5,7 @@ import com.example.demo.util.FaultException;
 import com.example.demo.util.GlobalResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -26,9 +27,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public GlobalResponse<Object> handlerException(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getAllErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining());
-        log.error(e.getMessage(), e);
-        return GlobalResponse.fail(message);
+        ObjectError error = e.getBindingResult().getAllErrors().get(0);
+        log.error(error.getDefaultMessage());
+        return GlobalResponse.fail(error.getDefaultMessage());
     }
 
     @ExceptionHandler(Exception.class)

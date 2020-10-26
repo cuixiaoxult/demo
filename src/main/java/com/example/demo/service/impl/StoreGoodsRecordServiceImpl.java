@@ -82,11 +82,11 @@ public class StoreGoodsRecordServiceImpl extends ServiceImpl<StoreGoodsRecordDao
 
     @Override
     public List<StoreGoodsRecordVo> list(StoreGoodsRecordQueryVo query) {
-        log.info("[按条件更新指定字段] storeGoodsRecordVo：{}", query);
+        log.info("[按条件查询指定字段] storeGoodsRecordVo：{}", query);
         List<StoreGoodsRecordVo> storeGoodsRecordVos = new LinkedList<>();
         List<StoreGoodsRecord> records = this.list(new QueryWrapper<StoreGoodsRecord>()
                 .eq(StoreGoodsRecordM.STORE_NO, query.getStoreNo())
-                .eq(StoreGoodsRecordM.GOODS_NO, query.getGoodsNo()));
+                .in(StoreGoodsRecordM.GOODS_NO, query.getGoodsNo()));
         if (CollectionUtils.isEmpty(records)) {
             return storeGoodsRecordVos;
         }
