@@ -38,12 +38,12 @@ public class StoreGoodsRecordController {
     /**
      * 查询分页数据
      */
-    @PostMapping(value = "/page")
+    @PostMapping("/page")
     public MyPage<StoreGoodsRecordVo> listPage(@Valid @RequestBody StoreGoodsRecordQueryVo query) {
         return storeGoodsRecordService.listPage(query);
     }
 
-    @PostMapping(value = "/list")
+    @PostMapping("/list")
     public List<StoreGoodsRecordVo> list(@Valid @RequestBody StoreGoodsRecordQueryVo query) {
         return storeGoodsRecordService.list(query);
     }
@@ -68,7 +68,7 @@ public class StoreGoodsRecordController {
     /**
      * 新增
      */
-    @PostMapping(value = "/add")
+    @PostMapping("/add")
     public int saveStoreGoodsRecord(@RequestBody @Valid StoreGoodsRecordVo storeGoodsRecordVo) {
         return storeGoodsRecordService.saveStoreGoodsRecord(storeGoodsRecordVo);
     }
@@ -76,7 +76,7 @@ public class StoreGoodsRecordController {
     /**
      * 修改
      */
-    @PutMapping(value = "/update")
+    @PutMapping("/update")
     public int updateStoreGoodsRecord(@RequestBody @Valid StoreGoodsRecordVo storeGoodsRecordVo) {
         return storeGoodsRecordService.updateStoreGoodsRecord(storeGoodsRecordVo);
     }
