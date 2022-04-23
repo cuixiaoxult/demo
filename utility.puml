@@ -1,0 +1,153 @@
+@startuml
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor blue
+  LifeLineBackgroundColor #B0D7FB
+  NoteBorderColor blue
+  ParticipantBorderColor blue
+  ParticipantBackgroundColor #B0D7FB
+  ParticipantFontSize   15
+  ActorBorderColor blue
+  ActorBackgroundColor #B0D7FB
+  ActorFontSize 12
+}
+
+autonumber
+
+' queue Databus
+' box ACQUIRING
+actor "Consumer" as consumer
+participant "Android/iOS App" as  app
+participant "user/business api" as userApi
+participant "utility" as utility
+participant "channels" as  channel
+participant "order" as order
+participant "account" as  account
+participant "user" as user
+participant "risk" as  risk
+participant "sms" as  sms
+participant "job" as job
+queue "Message Broker" as mq
+
+consumer->app: 生活缴费入口
+app->userApi: API:/v1/untility/service/list\n query utility command查询缴费分类
+userApi->utility:[Dubbo] UtilityFacade.queryUtilityService\n 查询缴费业务
+utility->utility: query untility_service\n 查询生活缴费业务数据
+utility-->userApi: utility service data
+userApi->app: show utility service\n 展示缴费业务
+
+app->userApi: API:/v1/utility/serviceProvider/list\n 查询缴费单位
+userApi->utility:[Dubbo] UtilityFacade.queryServiceProvider\n 查询缴费单位
+utility->utility: query untility_service_provider\n 查询缴费单位数据
+utility-->userApi: utility provider data
+userApi->app: show utility provider\n 展示缴费单位
+
+alt service_type is top_up
+    app -> userApi: API:/v1/utility/mobile/list\n ，模糊查询该用户最近充值手机号
+    userApi->utility: [Dubbo] UtilityFacade.queryMoblie\n 模糊查询该用户最近充值手机号
+    utility-->utility: untility_order\n 查询缴费订单表
+    utility-->userApi: top_up mobile\n 返回最近的20个手机号
+    userApi-->app: top_up mobile\n 展示最近的20个手机号
+    consumer->app: input amount
+    app->app: verify amount
+   else service_type is payBill
+   app -> userApi: API:/v1/utility/bill/query\n ，查询户主账单
+   userApi -> utility: [Dubbo] UtilityFacade.queryBill\n ，查询户主账单
+   utility -> channel: [Dubbo] BillFacade.query\n ，查询户主账单
+   channel --> utility: Bill data Response\n
+   utility --> userApi: Bill data Response\n
+   userApi --> app: Bill data Response\n 展示账单信息
+end
+
+' app->utilityApi: API:/v1/utility/billingTrialCalculate\n ，账单试算
+' utilityApi->utility: [Dubbo] UtilityFacade.billingTrialCalculate\n ，账单试算
+' utility-->utilityApi: fees data
+' utilityApi->app: fees data\n 展示缴费信息
+
+app->userApi: API:/v1/utility/order/create\n ，创建缴费订单
+userApi->utility: [Dubbo] UtilityFacade.createOrder\n （status=INIT），创建缴费订单
+utility->order: [Dubbo] orderFacade.create\n ，创建支付交易订单
+order-->utility: return orderNo \n ，返回支付交易订单号
+utility-->userApi: return orderNo \n ，返回缴费订单号
+userApi->app: return orderNo \n ，返回缴费订单号
+
+consumer->app: input PIN
+app->userApi: API:/v1/order/verify/paymentpin\n,verifyPIN
+userApi->user: [Dubbo] userPaymentPinFacade.checkUserPaymentPin\n,verifyPIN
+alt 【success】
+    user-->userApi: status true  \n pin校验通过
+    userApi->risk: [netty] ts.send(sendStr)\n,风控-预交易
+else 【fail】
+    user-->userApi: status fail  \n pin校验不通过
+    userApi-->app: status fail  \n pin校验不通过
+end
+
+alt 【RISK LEVER A】
+    risk-->userApi: riskRccResult\n,风控-预交易 风控阻断 lever=A
+    userApi->order: [Dubbo] orderFacade.updateRisk \n ，回填订单表中的风控信息
+    userApi->risk: [netty] ts.send(sendStr)\n,风控-确认交易
+else 【RISK LEVER B】
+    risk-->userApi: riskRccResult\n,风控-预交易 lever=B verification otp
+    userApi->order: [Dubbo] orderFacade.updateRisk \n ，回填订单表中的风控信息
+    userApi->sms: [Dubbo] messageSenderFacade.sendOTP \n , 发送短信验证
+    sms-->consumer: status \n
+else 【other】
+    risk-->userApi: riskRccResult\n,风控-预交易 lever=B verification otp
+    userApi->order: [Dubbo] orderFacade.updateRisk \n ，回填订单表中的风控信息
+end
+
+consumer->app: input OTP
+app->userApi: API:/v1/order/verify/otp\n,verifyOTP
+userApi->sms: [Dubbo] otpMessageVerifyFacade.verifyOTP\n,verifyOTP
+sms-->userApi: status \n，
+
+consumer->app: 确认支付
+app->userApi: API: /api/v1/order/confirmPay\n,确认支付
+userApi->order: [Dubbo] orderFacade.payConfirm\n ，确认支付
+order->order: add order_payment_record \n ，新增支付记录
+order->account: [Dubbo] accountAppFacade.appSaveAccount \n , 冻结金额
+alt 【success】
+    account-->order: transactionState success \n,冻结成功
+    order->order: order_record success \n,更新订单状态
+    order-->mq: OPAY_ZAMBIA_ORDER_PAY_TOPIC \n,异步通知utility第一阶段支付成功mq
+    mq-->utility: UtilityPayCallbackConsumer \n,异步消费utility第一阶段支付成功mq
+    utility->channel: billFacade.pay  \n,调用渠道支付接口
+    channel-->utility: businessNo  \n,渠道异步返回调用结果和渠道单号
+    utility->utility: update utility_order  \n,更新缴费订单状态
+    order-->userApi: confirmPay detail \n,支付成功
+    userApi-->app: confirmPay detail \n,返回支付详情
+else 【fail】
+    account-->order: transactionState fail \n,冻结失败
+    order->order: update order_flow_record fail \n,订单流水记录更新为失败状态
+    order-->mq: OPAY_ZAMBIA_ORDER_PAY_TOPIC \n,异步通知utility支付失败mq
+    mq-->utility: OPAY_ZAMBIA_ORDER_PAY_TOPIC \n,异步消费utility支付失败mq
+    utility->utility: update utility_order  \n,更新缴费订单状态
+    order-->userApi: exception confirmPay fail \n,支付失败
+    userApi-->app: confirmPay fail \n,返回支付失败
+end
+
+mq-->utility: OPAY_UTILITIES_NOTIFY_TRANSACTION_TOPIC \n,渠道回调mq
+utility->order: orderFacade.paySecondStage \n,支付服务二阶段支付
+alt 【PAY_CONFIRM】
+    order->account: orderFacade.paySecondStage \n,二阶段确认支付
+    account-->order: result  \n,扣减资金成功
+    order->order: update order_payment_record \n,order_record \n,order_flow_record \n,更新表状态为成功
+
+else 【PAY_ROLLBACK】
+    order->account: orderFacade.paySecondStage \n,二阶段取消冻结
+    order-->order: update order_payment_record \n,order_record \n,order_flow_record \n,更新表状态为失败
+end
+alt 【success】
+    order-->utility: result \n,二阶段支付返回结果
+    utility->utility: update utility_order \n,更新表状态
+    utility->app: pushMessage \n,推送消息
+    utility->sms:[dubbo]messageSenderFacade.sendBizMessage \n,只有非本人话费充值发短信
+    sms->consumer: 只有非本人话费充值发短信
+else 【fail】
+    order-->utility: result \n,二阶段支付返回结果
+end
+
+job->utility: UtilityChannelResultJob \n, 主动查询渠道支付结果(逻辑同上)
+job->utility: UtilityPayChannelJob \n, 调用渠道付款任务补偿（逻辑同上）
+
+@enduml
