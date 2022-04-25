@@ -34,17 +34,19 @@ app->userApi: API:/v1/untility/service/list\n query utility command查询缴费�
 userApi->utility:[Dubbo] UtilityFacade.queryUtilityService\n 查询缴费业务
 utility->utility: query untility_service\n 查询生活缴费业务数据
 utility-->userApi: utility service data
-userApi->app: show utility service\n 展示缴费业务
+userApi-->app: show utility service\n 展示缴费业务
 
 app->userApi: API:/v1/utility/serviceProvider/list\n 查询缴费单位
 userApi->utility:[Dubbo] UtilityFacade.queryServiceProvider\n 查询缴费单位
-utility->utility: query untility_service_provider\n 查询缴费单位数据
-utility-->userApi: utility provider data
-userApi->app: show utility provider\n 展示缴费单位
+utility-[#red]>utility: query untility_service_provider\n 查询缴费单位数据
+note left:table增加支付场景字段
+utility--[#red]>userApi: utility provider data
+userApi--[#red]>app: show utility provider\n 展示缴费单位
 
 alt service_type is top_up
-    app -> userApi: API:/v1/utility/mobile/list\n ，模糊查询该用户最近充值手机号
-    userApi->utility: [Dubbo] UtilityFacade.queryMoblie\n 模糊查询该用户最近充值手机号
+    app -[#red]> userApi: API:/v1/utility/mobile/list\n ，模糊查询该用户最近充值手机号
+    note right: 接口改为通用(V518)
+    userApi-[#red]>utility: [Dubbo] UtilityFacade.queryMoblie\n 模糊查询该用户最近充值手机号
     utility-->utility: untility_order\n 查询缴费订单表
     utility-->userApi: top_up mobile\n 返回最近的20个手机号
     userApi-->app: top_up mobile\n 展示最近的20个手机号
@@ -64,12 +66,15 @@ end
 ' utility-->utilityApi: fees data
 ' utilityApi->app: fees data\n 展示缴费信息
 
-app->userApi: API:/v1/utility/order/create\n ，创建缴费订单
-userApi->utility: [Dubbo] UtilityFacade.createOrder\n （status=INIT），创建缴费订单
+app-[#red]>userApi: API:/v1/utility/order/create\n ，创建缴费订单
+note right: 增加支付场景字段(V518)
+userApi-[#red]>utility: [Dubbo] UtilityFacade.createOrder\n （status=INIT），创建缴费订单
+utility-[#red]>utility: add utility_order\n ，创建缴费订单
+note right: table增加支付场景字段(V518)
 utility->order: [Dubbo] orderFacade.create\n ，创建支付交易订单
 order-->utility: return orderNo \n ，返回支付交易订单号
 utility-->userApi: return orderNo \n ，返回缴费订单号
-userApi->app: return orderNo \n ，返回缴费订单号
+userApi-->app: return orderNo \n ，返回缴费订单号
 
 consumer->app: input PIN
 app->userApi: API:/v1/order/verify/paymentpin\n,verifyPIN
@@ -140,9 +145,9 @@ end
 alt 【success】
     order-->utility: result \n,二阶段支付返回结果
     utility->utility: update utility_order \n,更新表状态
-    utility->app: pushMessage \n,推送消息
+    utility-->app: pushMessage \n,推送消息
     utility->sms:[dubbo]messageSenderFacade.sendBizMessage \n,只有非本人话费充值发短信
-    sms->consumer: 只有非本人话费充值发短信
+    sms-->consumer: 只有非本人话费充值发短信
 else 【fail】
     order-->utility: result \n,二阶段支付返回结果
 end
