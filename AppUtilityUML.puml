@@ -39,27 +39,30 @@ userApi-->app: show utility service\n 展示缴费业务
 app->userApi: API:/v1/utility/serviceProvider/list\n 查询缴费单位
 userApi->utility:[Dubbo] UtilityFacade.queryServiceProvider\n 查询缴费单位
 utility-[#red]>utility: query untility_service_provider\n 查询缴费单位数据
-note left:table增加支付场景字段
-utility--[#red]>userApi: utility provider data
-userApi--[#red]>app: show utility provider\n 展示缴费单位
-
-alt service_type is top_up
-    app -[#red]> userApi: API:/v1/utility/mobile/list\n ，模糊查询该用户最近充值手机号
-    note right: 接口改为通用(V518)
-    userApi-[#red]>utility: [Dubbo] UtilityFacade.queryMoblie\n 模糊查询该用户最近充值手机号
-    utility-->utility: untility_order\n 查询缴费订单表
-    utility-->userApi: top_up mobile\n 返回最近的20个手机号
-    userApi-->app: top_up mobile\n 展示最近的20个手机号
-    consumer->app: input amount
-    app->app: verify amount
-   else service_type is payBill
-   app -> userApi: API:/v1/utility/bill/query\n ，查询户主账单
-   userApi -> utility: [Dubbo] UtilityFacade.queryBill\n ，查询户主账单
-   utility -> channel: [Dubbo] BillFacade.query\n ，查询户主账单
-   channel --> utility: Bill data Response\n
-   utility --> userApi: Bill data Response\n
-   userApi --> app: Bill data Response\n 展示账单信息
+note left:table增加支付场景字段(V518)
+note right:新增商品表(V530)
+utility--[#red]>userApi: utility provider data(增加支付场景字段V518,增加产品包集合V530)
+userApi--[#red]>app: show utility provider\n 展示缴费单位(增加支付场景字段V518,增加产品包集合V530)
+alt 【bill】
+    app -> userApi: API:/v1/utility/bill/query\n ，查询户主账单
+    userApi -> utility: [Dubbo] UtilityFacade.queryBill\n ，查询户主账单
+    utility -> channel: [Dubbo] BillFacade.query\n ，查询户主账单
+    channel --> utility: Bill data Response\n
+    utility --> userApi: Bill data Response\n
+    userApi --> app: Bill data Response\n 展示账单信息
+else 【Direct】
 end
+
+
+app -[#red]> userApi: API:/api/v1/utility/account/last\n ，查询该用户最近缴费充值账号
+userApi-[#red]>utility: [Dubbo] UtilityFacade.utilityAccountLastList\n 查询该用户最近缴费充值账号
+utility-->utility: untility_order\n 查询缴费订单表
+utility-->userApi: top_up mobile\n 返回最近的20个账号
+userApi-->app: top_up mobile\n 展示最近的20个账号
+consumer->app: input amount
+app->app: verify amount
+
+
 
 ' app->utilityApi: API:/v1/utility/billingTrialCalculate\n ，账单试算
 ' utilityApi->utility: [Dubbo] UtilityFacade.billingTrialCalculate\n ，账单试算
@@ -67,10 +70,9 @@ end
 ' utilityApi->app: fees data\n 展示缴费信息
 
 app-[#red]>userApi: API:/v1/utility/order/create\n ，创建缴费订单
-note right: 增加支付场景字段(V518)
+note right: 请求参数增加字段区分不同端(V518)\n , 增加账户与渠道关联表（或者增加渠道表，userId是其字段属性）（V530）\n ,增加渠道查询接口（V530）
 userApi-[#red]>utility: [Dubbo] UtilityFacade.createOrder\n （status=INIT），创建缴费订单
-utility-[#red]>utility: add utility_order\n ，创建缴费订单
-note right: table增加支付场景字段(V518)
+utility-[#green]>utility: add utility_order\n ，创建缴费订单\n ,增加渠道字段（V530）
 utility->order: [Dubbo] orderFacade.create\n ，创建支付交易订单
 order-->utility: return orderNo \n ，返回支付交易订单号
 utility-->userApi: return orderNo \n ，返回缴费订单号
@@ -116,7 +118,8 @@ alt 【success】
     order->order: order_record success \n,更新订单状态
     order-->mq: OPAY_ZAMBIA_ORDER_PAY_TOPIC \n,异步通知utility第一阶段支付成功mq
     mq-->utility: UtilityPayCallbackConsumer \n,异步消费utility第一阶段支付成功mq
-    utility->channel: billFacade.pay  \n,调用渠道支付接口
+    utility-[#green]>channel: billFacade.pay  \n,调用渠道支付接口
+    note left:增加价格字段，渠道字段(V530)
     channel-->utility: businessNo  \n,渠道异步返回调用结果和渠道单号
     utility->utility: update utility_order  \n,更新缴费订单状态
     order-->userApi: confirmPay detail \n,支付成功
@@ -148,6 +151,7 @@ alt 【success】
     utility-->app: pushMessage \n,推送消息
     utility->sms:[dubbo]messageSenderFacade.sendBizMessage \n,只有非本人话费充值发短信
     sms-->consumer: 只有非本人话费充值发短信
+    note left:兼容USSD短信发送逻辑
 else 【fail】
     order-->utility: result \n,二阶段支付返回结果
 end
