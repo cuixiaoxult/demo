@@ -23,8 +23,24 @@ class StoreGoodsRecordServiceImplTest extends BaseTest {
         StoreGoodsRecordVo storeGoodsRecordVo = new StoreGoodsRecordVo();
         storeGoodsRecordVo.setGoodsNo("3223003");
         storeGoodsRecordVo.setStoreNo("W072");
-        storeGoodsRecordVo.setBasePrice(new BigDecimal(100));
+        storeGoodsRecordVo.setBasePrice(new BigDecimal(102));
         boolean result = storeGoodsRecordService.updateByWrapper(storeGoodsRecordVo);
         assertTrue(result);
+    }
+
+    @Test
+    void saveStoreGoodsRecord() {
+        StoreGoodsRecordVo storeGoodsRecordVo = new StoreGoodsRecordVo();
+        storeGoodsRecordVo.setId(23893491L);
+        storeGoodsRecordVo.setGoodsNo("3223004");
+        storeGoodsRecordVo.setGoodsId(3223004L);
+        storeGoodsRecordVo.setStoreNo("W080");
+        storeGoodsRecordVo.setRegionCode("12309");
+        storeGoodsRecordVo.setBasePrice(new BigDecimal(1));
+        storeGoodsRecordVo.setSalePrice(new BigDecimal(1));
+        storeGoodsRecordVo.setRealSalePrice(new BigDecimal(1));
+        storeGoodsRecordVo.setSaleTaxRate("1");
+        int result = storeGoodsRecordService.saveStoreGoodsRecord(storeGoodsRecordVo);
+        assertEquals(1,result);
     }
 }

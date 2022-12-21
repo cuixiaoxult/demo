@@ -24,7 +24,7 @@ class OptimisticLockerTest extends BaseTest {
     @Test
     void OptimisticLocker() {
         log.info("[乐观锁测试]start...");
-        long id = 23893391L;
+        long id = 23893484L;
         StoreGoodsRecord storeGoodsRecord = storeGoodsRecordDao.selectById(id);
         log.info("[乐观锁测试] 模拟线程一 version:{}", storeGoodsRecord.getVersion());
         storeGoodsRecord.setGoodsNo("111abc");

@@ -1,0 +1,68 @@
+@startuml
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor blue
+  LifeLineBackgroundColor #B0D7FB
+  NoteBorderColor blue
+  ParticipantBorderColor blue
+  ParticipantBackgroundColor #B0D7FB
+  ParticipantFontSize   15
+  ActorBorderColor blue
+  ActorBackgroundColor #B0D7FB
+  ActorFontSize 12
+}
+
+autonumber
+
+' queue Databus
+' box ACQUIRING
+actor "Consumer" as consumer
+participant "Android/iOS App" as  app
+participant "opayMxApi" as  api
+participant "userCenter" as userCenter
+participant "sms" as  sms
+participant "redis" as  redis
+
+consumer->app: 注册登陆入口
+app->api: API:/api/v1/user/otp\n sendOtp 发送登陆验证码
+api->userCenter:[Dubbo] SmsFacade.getOtp\n 发送登陆验证码
+userCenter->userCenter:check Mobile\n 校验手机号合法
+userCenter->userCenter:verifySendSmsTotalNum\n 校验手机号每天发送次数
+userCenter->userCenter:verifySendSmsErrorTimes\n 校验手机号失败次数
+userCenter->redis:getOtpChannel\n 获取redis中的验证码
+redis-->userCenter:getOtpChannel\n 返回redis中的验证码
+userCenter->userCenter:getOtpChannel\n 轮询算法获取短信渠道
+userCenter->sms: [Dubbo] SmsMessageFacade.sendSmsMessage\n 调用短信服务发送otp
+alt 【success】
+    sms-->userCenter: status true  \n 发送otp成功
+    userCenter->redis: [redis] saveSmsCodeRedis\n 保存短信验证码到redis(默认5分钟，可配置)
+    userCenter->redis: [redis] saveSmsCodeCountRedis\n 记录指定时间内发送的条数(默认1天，可配置)
+else 【fail】
+    sms-->userCenter: status fail  \n 发送otp失败
+end
+userCenter-->api: status \n 发送结果状态
+api-->app: status \n 发送结果状态
+consumer->app: input OTP
+app->api: API:/api/v1/user/login/otp \n验证码注册登陆
+api->userCenter:[Dubbo] UserLoginFacade.loginBySmsCode\n 根据验证码注册登陆
+userCenter->userCenter:check param\n 校验入参合法
+userCenter->userCenter:updateLatestSmsVerifyTime\n 更新account_base的最近一次短信认证时间
+userCenter->userCenter:isSmsCodeMobileWhiteList\n 校验手机号白名单
+alt 【success】
+    userCenter->userCenter: smsCode:"1111"
+else 【fail】
+    userCenter->redis:getSmsCode\n 获取redis中的验证码
+    redis-->userCenter:smsCode\n 返回redis中的验证码
+    userCenter->userCenter:saveOtpVerifyHistory\n otp_verify_history 新增一条记录
+    userCenter->userCenter:saveErrorCount\n 校验并保存redis中的验证码失败次数
+end
+userCenter->userCenter:oneAccountBaseByMobile\n 根据手机号查询账号记录
+alt 【exist】
+    userCenter->userCenter: update lastLoginTime
+else 【not exist】
+    userCenter->userCenter: save accountBase,accountProfile\n 新增一条记录
+end
+userCenter->userCenter:createToken\n 创建token
+userCenter-->api:token\n 返回token
+api-->app:token\n 返回token
+@enduml

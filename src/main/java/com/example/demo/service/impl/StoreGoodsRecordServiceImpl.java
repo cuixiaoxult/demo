@@ -115,13 +115,18 @@ public class StoreGoodsRecordServiceImpl extends ServiceImpl<StoreGoodsRecordDao
     @Override
     public boolean updateByWrapper(StoreGoodsRecordVo storeGoodsRecordVo) {
         log.info("[按条件更新指定字段] storeGoodsRecordVo：{}", storeGoodsRecordVo);
-        UpdateWrapper<StoreGoodsRecord> updateWrapper = new UpdateWrapper<StoreGoodsRecord>()
-                .eq(StoreGoodsRecordM.GOODS_NO, storeGoodsRecordVo.getGoodsNo())
-                .eq(StoreGoodsRecordM.STORE_NO, storeGoodsRecordVo.getStoreNo());
-        StoreGoodsRecord storeGoodsRecord = new StoreGoodsRecord();
-        storeGoodsRecord.setBasePrice(storeGoodsRecordVo.getBasePrice());
-        storeGoodsRecord.setUpdateTime(LocalDateTime.now());
-        return this.update(storeGoodsRecord, updateWrapper);
+//        UpdateWrapper<StoreGoodsRecord> updateWrapper = new UpdateWrapper<StoreGoodsRecord>()
+//                .eq(StoreGoodsRecordM.GOODS_NO, storeGoodsRecordVo.getGoodsNo())
+//                .eq(StoreGoodsRecordM.STORE_NO, storeGoodsRecordVo.getStoreNo());
+//        StoreGoodsRecord storeGoodsRecord = new StoreGoodsRecord();
+//        storeGoodsRecord.setBasePrice(storeGoodsRecordVo.getBasePrice());
+//        storeGoodsRecord.setUpdateTime(LocalDateTime.now());
+//        return this.update(storeGoodsRecord, updateWrapper);
+        return lambdaUpdate().set(StoreGoodsRecord::getBasePrice,storeGoodsRecordVo.getBasePrice())
+                .set(StoreGoodsRecord::getUpdateTime,LocalDateTime.now())
+                .eq(StoreGoodsRecord::getGoodsNo,storeGoodsRecordVo.getGoodsNo())
+                .eq(StoreGoodsRecord::getStoreNo,storeGoodsRecordVo.getStoreNo())
+                .update();
     }
 
     @Override

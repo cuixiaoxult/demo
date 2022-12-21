@@ -1,0 +1,93 @@
+@startuml
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor blue
+  LifeLineBackgroundColor #B0D7FB
+  NoteBorderColor blue
+  ParticipantBorderColor blue
+  ParticipantBackgroundColor #B0D7FB
+  ParticipantFontSize   15
+  ActorBorderColor blue
+  ActorBackgroundColor #B0D7FB
+  ActorFontSize 12
+}
+
+autonumber
+
+' queue Databus
+' box ACQUIRING
+actor "Consumer" as consumer
+participant "Android/iOS App" as  app
+participant "okash-service-ng" as service
+participant "okash-crb-ng" as  crb
+participant "mono" as  mono
+participant "risk" as  risk
+participant "sms" as  sms
+participant "push" as  push
+participant "redis" as  redis
+queue "Message Broker" as mq
+
+consumer->app: 新用户营销页入口\n单期分期额度选择页入口\n账户页入口
+app->service: API:/api/v1/mono/getBanner\n 获取banner(apollo增加配置)
+service->crb: query Okash_mono_auth_history \n  获取授权次数
+crb-->service: return authCount\n 返回数据（授权次数）
+service-->app: return data
+
+consumer->app: 用信页面mono的入口
+app->service: API:/api/v1/mono/loan/upQuota\n 获取用信数据
+service->service: 获取apollo配置mono开关
+alt OPEN
+    service->crb: [https]]查询是否授权接口
+    crb->crb: [mysql]]查询Okash_mono_auth_history
+    alt YES
+    crb-->service: return true
+    service-->app: return data（Increase limit false）\n 获取用信数据
+    note right:比例改为金额（增加金额字段）\n
+    else NO
+    crb-->service: return false
+    service-->app: return data（Increase limit true）
+    end
+else CLOSE
+    service-->app: return data\n 获取用信数据
+    note right:比例改为金额（增加金额字段）
+end
+
+app->mono: to authorize \n [通用逻辑]跳转mono的H5页面去授权
+mono-->app: return mono code \n 获取code
+app->service: API:/api/v1/mono/auth\n 授权入口
+service->crb: API:/api/v1/mono/auth\n 授权入口
+crb->mono: [https]:/account/auth\n 根据code获取monoId
+mono-->crb: return monoId\n 根据code获取monoId
+crb->mono: [https]:/accounts/{id}\n 根据monoId获取account details
+mono-->crb: "data_status": "AVAILABLE" \n AVAILABLE
+crb->crb: [mysql]:insert Okash_mono_auth_history\n 新增account details
+alt AVAILABLE
+    push-->consumer: mono授权成功短信
+    crb-->crb: [异步]:refresh \n refresh
+    alt 用信
+        crb->mq: topic\n 投递到延迟队列（有效期一天）
+            mq-->service: topic\n 投递到延迟队列，查询5个特征数据的成功状态至少有三个成功（有效期一天）
+            service->redis: 投递到redis队列
+            redis-->risk: 风控消费redis队列（字段applyId）
+            risk->service: [https]:/v1/loan/apply/increase/notify\n 风控提额回调接口
+            note right:风控回调
+            service->service: 提额数据落库
+    else 其他
+    end
+else PROCESSING
+    service->mq: topic\n 投递到延迟队列，重复查询直到成功（有效期一天）
+    mq-->crb: topic\n 消费mq
+    crb->mono: [https]:/accounts/{id}\n 根据monoId获取account details
+    mono-->crb: "data_status": "AVAILABLE" \n AVAILABLE
+else FAILED
+    push-->consumer: mono授权失败短信
+end
+crb-->service: return data_status/monoId
+service-->app: return monoId\n return monoId
+
+app->service: API:/api/v1/mono/getAuthInfo\n 轮询查询账号授权结果
+service->crb: API:/api/v1/mono/getAuthInfo\n 查询账号授权结果
+crb->crb: [mysql] query Okash_mono_auth_history\n 查询账号授权结果
+crb-->service: 返回账号授权结果
+service-->app: 返回账号授权结果
+@enduml

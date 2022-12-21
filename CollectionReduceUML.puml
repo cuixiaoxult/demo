@@ -1,0 +1,48 @@
+@startuml
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor blue
+  LifeLineBackgroundColor #B0D7FB
+  NoteBorderColor blue
+  ParticipantBorderColor blue
+  ParticipantBackgroundColor #B0D7FB
+  ParticipantFontSize   15
+  ActorBorderColor blue
+  ActorBackgroundColor #B0D7FB
+  ActorFontSize 12
+}
+
+autonumber
+
+actor "Consumer" as consumer
+participant "Android/iOS App" as  app
+participant "BS" as  bs
+participant "collection" as  collection
+participant "rpc" as rpc
+participant "pay" as  pay
+participant "core" as  core
+
+consumer->bs: 入口
+bs->collection: 减免功能展示页（工单管理页&催收记录页）
+collection->rpc:ReducePenaltyBill(ReducePenaltyBillReq)\n 减免账单查询
+rpc->rpc:query apollo config data\n 获取apollo配置规则
+rpc->rpc:query microloan.repay_plan\n 根据订单查询还款计划数据
+rpc->rpc:query okash.reduce_record\n 根据订单查询账单减免数据
+rpc->rpc: 根据apollo配置规则计算不同账龄数据
+rpc-->collection:ReducePenaltyBillResp\n 返回减免账单数据
+collection-->bs:ReducePenaltyBillResp\n 返回减免账单数据
+
+bs->collection:账单减免金额申请（工单管理页&催收记录页）（用户还款成功后的操作）
+alt 【approve】
+    collection->collection: insert data approve  \n 保存到状态为审批通过的数据到数据库
+    collection->rpc: ReducePenaltyApply(ReducePenaltyApplyReq)\n 申请减免审批成功同步数据到okash
+    rpc->rpc: insert reduce_record\n插入一条记录
+    rpc->pay: 待贞强提供https的平账接口
+    pay->rpc: 返回平账结果
+    rpc->collection: ReducePenaltyApplyResp\n 返回数据
+else 【refuse】
+    collection-->collection: nsert data success refuse  \n 保存到状态为审批驳回的数据到数据库
+end
+collection-->bs: status \n 返回结果
+
+@enduml
