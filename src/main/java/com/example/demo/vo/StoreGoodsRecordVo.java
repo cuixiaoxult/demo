@@ -5,6 +5,7 @@ import lombok.ToString;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 
@@ -191,14 +192,14 @@ public class StoreGoodsRecordVo implements Serializable {
      */
 
 
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 该记录最后更新时间
      */
 
 
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     /**
      * 活动文本
@@ -212,35 +213,35 @@ public class StoreGoodsRecordVo implements Serializable {
      */
 
 
-    private Date saleBeginDate;
+    private LocalDateTime saleBeginDate;
 
     /**
      * 促销结束时间
      */
 
 
-    private Date saleEndDate;
+    private LocalDateTime saleEndDate;
 
     /**
      * VIP价格开始时间
      */
 
 
-    private Date vipBeginDate;
+    private LocalDateTime vipBeginDate;
 
     /**
      * VIP价格结束时间
      */
 
 
-    private Date vipEndDate;
+    private LocalDateTime vipEndDate;
 
     /**
      * 价格变更日期
      */
 
 
-    private Date priceChangeDate;
+    private LocalDateTime priceChangeDate;
 
     /**
      * 折扣单价
