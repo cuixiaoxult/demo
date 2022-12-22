@@ -12,6 +12,7 @@ import lombok.ToString;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * <p>
@@ -120,12 +121,12 @@ public class StoreGoodsRecord implements Serializable {
     /**
      * 该记录创建时间
      */
-    private LocalDateTime createTime;
+    private Date createTime;
     /**
      * 该记录最后更新时间
      */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime updateTime;
+    private Date updateTime;
     /**
      * 活动文本
      */
@@ -133,23 +134,23 @@ public class StoreGoodsRecord implements Serializable {
     /**
      * 促销开始时间
      */
-    private LocalDateTime saleBeginDate;
+    private Date saleBeginDate;
     /**
      * 促销结束时间
      */
-    private LocalDateTime saleEndDate;
+    private Date saleEndDate;
     /**
      * VIP价格开始时间
      */
-    private LocalDateTime vipBeginDate;
+    private Date vipBeginDate;
     /**
      * VIP价格结束时间
      */
-    private LocalDateTime vipEndDate;
+    private Date vipEndDate;
     /**
      * 价格变更日期
      */
-    private LocalDateTime priceChangeDate;
+    private Date priceChangeDate;
     /**
      * 折扣单价
      */
