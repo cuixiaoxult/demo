@@ -100,7 +100,7 @@ public class StoreGoodsRecordServiceImpl extends ServiceImpl<StoreGoodsRecordDao
     public int saveStoreGoodsRecord(StoreGoodsRecordVo storeGoodsRecordVo) {
         StoreGoodsRecord storeGoodsRecord = new StoreGoodsRecord();
         BeanUtils.copyProperties(storeGoodsRecordVo, storeGoodsRecord);
-        //storeGoodsRecord.setCreateTime(LocalDateTime.now());
+        storeGoodsRecord.setCreateTime(LocalDateTime.now());
         return storeGoodsRecordDao.insert(storeGoodsRecord);
     }
 
@@ -108,7 +108,7 @@ public class StoreGoodsRecordServiceImpl extends ServiceImpl<StoreGoodsRecordDao
     public int updateStoreGoodsRecord(StoreGoodsRecordVo storeGoodsRecordVo) {
         StoreGoodsRecord storeGoodsRecord = storeGoodsRecordDao.selectById(storeGoodsRecordVo.getId());
         BeanUtils.copyProperties(storeGoodsRecordVo, storeGoodsRecord);
-        //storeGoodsRecord.setUpdateTime(LocalDateTime.now());
+        storeGoodsRecord.setUpdateTime(LocalDateTime.now());
         return storeGoodsRecordDao.updateById(storeGoodsRecord);
     }
 

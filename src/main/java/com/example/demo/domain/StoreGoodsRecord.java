@@ -121,12 +121,12 @@ public class StoreGoodsRecord implements Serializable {
     /**
      * 该记录创建时间
      */
-    private Date createTime;
+    private LocalDateTime createTime;
     /**
      * 该记录最后更新时间
      */
     @TableField(fill = FieldFill.INSERT)
-    private Date updateTime;
+    private LocalDateTime updateTime;
     /**
      * 活动文本
      */
@@ -134,23 +134,23 @@ public class StoreGoodsRecord implements Serializable {
     /**
      * 促销开始时间
      */
-    private Date saleBeginDate;
+    private LocalDateTime saleBeginDate;
     /**
      * 促销结束时间
      */
-    private Date saleEndDate;
+    private LocalDateTime saleEndDate;
     /**
      * VIP价格开始时间
      */
-    private Date vipBeginDate;
+    private LocalDateTime vipBeginDate;
     /**
      * VIP价格结束时间
      */
-    private Date vipEndDate;
+    private LocalDateTime vipEndDate;
     /**
      * 价格变更日期
      */
-    private Date priceChangeDate;
+    private LocalDateTime priceChangeDate;
     /**
      * 折扣单价
      */
