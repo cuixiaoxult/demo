@@ -1,0 +1,63 @@
+@startuml
+skinparam sequence {
+  ArrowColor black
+  LifeLineBorderColor blue
+  LifeLineBackgroundColor #B0D7FB
+  NoteBorderColor blue
+  ParticipantBorderColor blue
+  ParticipantBackgroundColor #B0D7FB
+  ParticipantFontSize   15
+  ActorBorderColor blue
+  ActorBackgroundColor #B0D7FB
+  ActorFontSize 12
+}
+
+autonumber
+
+' queue Databus
+' box ACQUIRING
+
+participant "okash-service-ng" as service
+participant "redis" as  redis
+participant "opay-finance-ngn-okash-rpc" as  rpc
+participant "platform" as  platform
+participant "job" as job
+
+
+
+service->redis: JedisClusterUtils.push(QUEUE_PHONEVERIFY_V2, value);\n 进件申请放入电核队列
+redis-->rpc: JedisClusterUtils.brpop(0, QUEUE_PHONEVERIFY_V2);\n 电核队列消费
+rpc->rpc: insert data(create table)  \n 落一条数据
+rpc->platform: rpc OrderEnterInspect (OrderEnterInspectReq) returns (OrderEnterInspectResp) {} \n  订单进入信审系统
+platform->rpc: rpc OneOrderByOrderId(OrderReq) returns (OrderResp) {}\n 通过OrderID获取订单信息
+rpc-->platform: rpc returns OrderResp
+platform->rpc: rpc OneCustomerInfo (CustomerInfoReq) returns (CustomerInfoResp) {}\n 获取客户信息
+rpc-->platform: rpc returns CustomerInfoResp
+platform->rpc: rpc GetCustomerDetail(GetCustomerDetailReq) returns (GetCustomerDetailResp){}\n 获取客户详情
+rpc-->platform: rpc returns GetCustomerDetailResp
+platform->rpc: rpc BatchGetResourceURL(BatchGetResourceURLReq) returns (BatchGetResourceURLResp){}\n 批量根据资源ID获取URL
+rpc-->platform: rpc returns BatchGetResourceURLResp
+platform->rpc: rpc OrderLeaveInspect (OrderLeaveInspectReq) returns (OrderLeaveInspectResp) {}\n 信审系统推送电核结果
+rpc-->platform: rpc returns OrderLeaveInspectResp
+rpc->redis: JedisClusterUtils.push(queueOk2, value);\n 将订单信审结果放入redis队列
+redis-->service: JedisClusterUtils.brpop(0, queueOk2);\n 消费订单信审结果队列
+
+
+job->rpc: PhoneVerifyResultJob \n, 主动查询电核结果结果
+job->rpc: PhoneVerifyResultJob \n, 主动查询电核结果结果
+rpc->platform: rpc GetVerifyResult (GetVerifyResultReq) returns(GetVerifyResultResp) {}\n 获取PVIR审核结果
+rpc->redis: JedisClusterUtils.push(queueOk2, value);\n 将订单信审结果放入redis队列
+redis-->service: JedisClusterUtils.brpop(0, queueOk2);\n 消费订单信审结果队列
+'rpc->platform: rpc FinishInspect (FinishInspectReq) returns (FinishInspectResp) {}\n 业务主动终结电核工单
+
+
+
+
+
+
+
+
+
+
+
+@enduml

@@ -146,14 +146,55 @@ public class Test2 {
 //        int c = a/b;
 //        System.out.println(c);
 
-        Double dou = new Double(1.1);
-        BigDecimal bigDecimal = new BigDecimal(dou);
-        System.out.println(bigDecimal);
-        System.out.println("******************");
-        Long lon = 10000L;
-        BigDecimal l = new BigDecimal(lon);
-        System.out.println(l);
+//        Double dou = new Double(1.1);
+//        BigDecimal bigDecimal = new BigDecimal(dou);
+//        System.out.println(bigDecimal);
+//        System.out.println("******************");
+//        Long lon = 10000L;
+//        BigDecimal l = new BigDecimal(lon);
+//        System.out.println(l);
+//        String sms = "abcdefv";
+//        String[] values = sms.split("##");
+//        List<String> list = Arrays.asList("25", "225", "1000", "20", "15");
+//        List<Long> l = list.stream().map(Long::parseLong).collect(Collectors.toList());
+        // 同组最小值
+//        Map<Integer, Optional<Student>> groupMin = studentList.stream()
+//                .collect(Collectors.groupingBy(Student::getAge, Collectors.minBy(Comparator.comparing(Student::getScore))));
+//        System.out.println(groupMin);
+        Map<Integer, Optional<Integer>> result = studentList.stream()
+                .collect(Collectors.groupingBy(Student::getAge, Collectors.mapping(Student::getScore, Collectors.minBy(Integer::compareTo))));
+        Optional<Integer> optionalInteger = result.get(8);
+        Integer score = 0;
+        if (optionalInteger == null || !optionalInteger.isPresent()) {
+            score = -1;
+        } else {
+            score = optionalInteger.get();
+        }
+        System.out.println(score);
+    }
 
+    static final List<Student> studentList = Arrays.asList(
+            new Student("S1", 8, 80),
+            new Student("S2", 8, 80),
+            new Student("S3", 8, 85),
+            new Student("S4", 8, 90),
+            new Student("S5", 9, 95),
+            new Student("S6", 9, 85),
+            new Student("S7", 9, 90)
+    );
+
+    /**
+     * 获取服务器核数
+     *
+     * @return
+     */
+    public static int getCoreCount() {
+        return Runtime.getRuntime().availableProcessors();
+    }
+
+    public static boolean isContain(String str) {
+        String key = "723856739128049664,723856739128049663,723856739128049665";
+        return key.contains(str);
     }
 
     public static String mobilePrefix(String mobile) {
