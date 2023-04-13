@@ -18,38 +18,80 @@ autonumber
 ' box ACQUIRING
 
 participant "okash-service-ng" as service
-participant "redis" as  redis
+queue "Message Broker" as mq
 participant "opay-finance-ngn-okash-rpc" as  rpc
 participant "platform" as  platform
 participant "job" as job
+participant "redis" as  redis
 
 
+group rpc OrderEnterInspect (OrderEnterInspectReq) returns (OrderEnterInspectResp) {}
+    service->mq: PhoneVerifyService.pushToPhoneVerifyQueue()\n OK_ORDER_PUSH_PV_TOPIC;\n 进件申请放入电核队列(灰度发布权重：orderPushPVWeightRate)
+    mq-->rpc: PushPVConsumer \n OK_ORDER_PUSH_PV_TOPIC\n 电核队列消费
+    rpc->rpc: check phoneVerifyLog is existed
+    loop 3次
+        rpc->platform: rpc OrderEnterInspect (OrderEnterInspectReq) returns (OrderEnterInspectResp) {} \n  push order to platform
+        alt success
+            platform --> rpc: return result
+            rpc->rpc: insert into phone_verify_log \n PhoneVerifyLogStatusEnum.PUSH_PV_SUCCESS.getCode()\nPhoneVerifyStatusEnum.PROCESSING.getValue()
+            note right : create table phone_verify_log
+        else fail
+            platform --> rpc: return result
+            rpc->rpc: insert into phone_verify_log \n PhoneVerifyLogStatusEnum.PUSH_PV_FAIL.getCode()\nPhoneVerifyStatusEnum.INITIAL.getValue()
+        end
+    end
 
-service->redis: JedisClusterUtils.push(QUEUE_PHONEVERIFY_V2, value);\n 进件申请放入电核队列
-redis-->rpc: JedisClusterUtils.brpop(0, QUEUE_PHONEVERIFY_V2);\n 电核队列消费
-rpc->rpc: insert data(create table)  \n 落一条数据
-rpc->platform: rpc OrderEnterInspect (OrderEnterInspectReq) returns (OrderEnterInspectResp) {} \n  订单进入信审系统
-platform->rpc: rpc OneOrderByOrderId(OrderReq) returns (OrderResp) {}\n 通过OrderID获取订单信息
-rpc-->platform: rpc returns OrderResp
-platform->rpc: rpc OneCustomerInfo (CustomerInfoReq) returns (CustomerInfoResp) {}\n 获取客户信息
-rpc-->platform: rpc returns CustomerInfoResp
-platform->rpc: rpc GetCustomerDetail(GetCustomerDetailReq) returns (GetCustomerDetailResp){}\n 获取客户详情
-rpc-->platform: rpc returns GetCustomerDetailResp
-platform->rpc: rpc BatchGetResourceURL(BatchGetResourceURLReq) returns (BatchGetResourceURLResp){}\n 批量根据资源ID获取URL
-rpc-->platform: rpc returns BatchGetResourceURLResp
-platform->rpc: rpc OrderLeaveInspect (OrderLeaveInspectReq) returns (OrderLeaveInspectResp) {}\n 信审系统推送电核结果
-rpc-->platform: rpc returns OrderLeaveInspectResp
-rpc->redis: JedisClusterUtils.push(queueOk2, value);\n 将订单信审结果放入redis队列
-redis-->service: JedisClusterUtils.brpop(0, queueOk2);\n 消费订单信审结果队列
+    rpc-->mp: end
+end
 
+group rpc OneOrderByOrderId(OrderReq) returns (OrderResp) {}
+    platform->rpc: rpc OneOrderByOrderId(OrderReq) returns (OrderResp) {}\n 通过OrderID获取订单信息
+    rpc->rpc: Orders orders = ordersService.getOne(ordersQueryWrapper);
+    rpc->rpc: OkashLoanApply apply = applyService.getOne(applyQueryWrapper);
+    rpc-->platform: rpc returns OrderResp
+end
 
-job->rpc: PhoneVerifyResultJob \n, 主动查询电核结果结果
-job->rpc: PhoneVerifyResultJob \n, 主动查询电核结果结果
-rpc->platform: rpc GetVerifyResult (GetVerifyResultReq) returns(GetVerifyResultResp) {}\n 获取PVIR审核结果
-rpc->redis: JedisClusterUtils.push(queueOk2, value);\n 将订单信审结果放入redis队列
-redis-->service: JedisClusterUtils.brpop(0, queueOk2);\n 消费订单信审结果队列
-'rpc->platform: rpc FinishInspect (FinishInspectReq) returns (FinishInspectResp) {}\n 业务主动终结电核工单
+group rpc OneCustomerInfo (CustomerInfoReq) returns (CustomerInfoResp) {}
+    platform->rpc: rpc OneCustomerInfo (CustomerInfoReq) returns (CustomerInfoResp) {}\n 获取客户信息
+    alt par
+        rpc->rpc: OkashUser getByUserId(String userId);
+    else
+        rpc->rpc: OkashUserProfile getByUserId(String userId);
+    else
+        rpc->rpc: OkashUserBankaccount getByUserId(String userId);
+    else
+        rpc->rpc: Map<String, OkashUserImage> getUserImageMap(String userId);
+    else
+        rpc->rpc: Map<String, List<SysDict>> mapByTypes(List<String> types);
+        note right :cache caffeine 30min
+    end
+    rpc-->platform: rpc returns CustomerInfoResp
+end
+group rpc GetCustomerDetail(GetCustomerDetailReq) returns (GetCustomerDetailResp){}
+    platform->rpc: rpc GetCustomerDetail(GetCustomerDetailReq) returns (GetCustomerDetailResp){}\n 获取客户详情
+    rpc->rpc: OkashUserProfile profile = profileService.getOne(queryWrapper)
+    rpc-->platform: rpc returns GetCustomerDetailResp
+end
+group rpc BatchGetResourceURL(BatchGetResourceURLReq) returns (BatchGetResourceURLResp){}
+    platform->rpc: rpc BatchGetResourceURL(BatchGetResourceURLReq) returns (BatchGetResourceURLResp){}\n 批量根据资源ID获取URL
+    rpc->rpc: List<OkashUserImage> getByIds(List<Long> ids);
+    rpc-->platform: rpc returns BatchGetResourceURLResp
+end
+group rpc OrderLeaveInspect (OrderLeaveInspectReq) returns (OrderLeaveInspectResp) {}
+    platform->rpc: rpc OrderLeaveInspect (OrderLeaveInspectReq) returns (OrderLeaveInspectResp) {}\n 信审系统推送电核结果
+    rpc->rpc: check order is null
+    rpc->rpc: boolean updatePhoneVerifyResult(PhoneVerifyResultParam phoneVerifyResultParam);
+    rpc-->platform: rpc returns OrderLeaveInspectResp
+end
+group JedisClusterUtils.push(queueOk2, value)
+    loop 3次
+        rpc->redis: JedisClusterUtils.push(queueOk2, value);\n 将订单信审结果放入redis队列
+        redis-->rpc: return result
+    end
+end
 
+job->rpc: /api/v1/phoneVerify/pushPV \n, 推送订单到电核中台(补偿)
+job->rpc: /api/v1/phoneVerify/pullPVResult \n, 主动查询电核结果结果(一期暂时不起用)
 
 
 
