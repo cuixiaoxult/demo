@@ -8,6 +8,7 @@ import com.example.demo.service.CustomerService;
 import com.example.demo.vo.PhoneVerifyResultMessage;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -39,11 +42,23 @@ public class TestController {
     private Customer2Service customer2Service;
 
     @GetMapping("/a")
-    public String hello(HttpServletRequest request, HttpServletResponse response) {
+    public String hello(HttpServletRequest request, HttpServletResponse response) throws ExecutionException, InterruptedException {
         String a = "Hello Springboot!";
         log.info("打印日志info:{}", a);
         String contextPath = request.getContextPath();
         log.info("contextPath:{}", contextPath);
+        CompletableFuture<Void> cf1 = CompletableFuture.runAsync(() ->
+                System.out.println(Thread.currentThread() + " cf1 do something....")
+        );
+        CompletableFuture<Void> cf2 = CompletableFuture.runAsync(() ->
+                System.out.println(Thread.currentThread() + " cf2 do something....")
+        );
+        CompletableFuture<Void> cf3 = CompletableFuture.runAsync(() ->
+                System.out.println(Thread.currentThread() + " cf3 do something....")
+        );
+        log.info("打印日志 cf1.get:{}", cf1.get());
+        log.info("打印日志 cf2.get:{}", cf2.get());
+        log.info("打印日志 cf3.get:{}", cf3.get());
         return a;
     }
 

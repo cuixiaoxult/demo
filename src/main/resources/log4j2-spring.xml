@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level traceId:[%X{traceId}] %c{36} -- %m%n
+        </Property>
+        <Property name="LOG_PATTERN_ERROR">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level traceId:[%X{traceId}] %c{36} -- %m%n
+        </Property>
+        <Property name="APP_LOG_ROOT">/data/logs</Property>
+        <Property name="APP_NAME">demo</Property>
+    </Properties>
+    <!--先定义所有的appender-->
+    <Appenders>
+        <!--这个输出控制台的配置-->
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <!--输出日志的格式-->
+            <PatternLayout charset="UTF-8" pattern="${LOG_PATTERN}"/>
+        </Console>
+        <!-- 这个会打印出所有的Info及以下级别的信息，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档-->
+        <RollingRandomAccessFile name="RollingFileInfo"
+                                 fileName="${APP_LOG_ROOT}/${APP_NAME}-info.log"
+                                 filePattern="${APP_LOG_ROOT}/$${date:yyyy-MM}/${APP_NAME}-%d{yyyy-MM-dd}-%i.zip">
+            <PatternLayout charset="UTF-8" pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256 MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="512">
+                <Delete basePath="${APP_LOG_ROOT}" maxDepth="2">
+                    <IfFileName glob="*/${APP_NAME}-*.zip"/>
+                    <IfLastModified age="60d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="RollingFileError"
+                                 fileName="${APP_LOG_ROOT}/${APP_NAME}-error.log"
+                                 filePattern="${APP_LOG_ROOT}/$${date:yyyy-MM}/${APP_NAME}-error-%d{yyyy-MM-dd}-%i.zip">
+            <AlarmLog4j2Filter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout charset="UTF-8" pattern="${LOG_PATTERN_ERROR}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="256 MB"/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="RollingFileELK"
+                                 immediateFlush="true"
+                                 fileName="${APP_LOG_ROOT}/${APP_NAME}-elk.log"
+                                 filePattern="${APP_LOG_ROOT}/${date:yyyy-MM}/${APP_NAME}-elk-%d{yyyy-MM-dd}-%i.zip"
+                                 json="true">
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <Filters>
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <!--指定日志输出格式 ELK强制json projectName 见projectName名称约定 -->
+            <JsonPatternLayout projectName="${APP_NAME}" pattern="${LOG_PATTERN}" charset="UTF-8" json="true"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!--运维建议大小5120MB 当文件大小超过5120MB时，通知RollingPolicy轮转-->
+                <SizeBasedTriggeringPolicy size="5120MB"/>
+            </Policies>
+            <!-- DefaultRolloverStrategy属性如不设置，则默认为最多同一文件夹下7个文件，这里设置了30 -->
+            <DefaultRolloverStrategy max="30"/>
+        </RollingRandomAccessFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFileInfo"/>
+        </Root>
+        <Logger name="org.springframework" additivity="false">
+            <AppenderRef ref="RollingFileInfo"/>
+            <AppenderRef ref="RollingFileError"/>
+            <AppenderRef ref="RollingFileELK"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.mybatis" additivity="true" level="DEBUG">
+            <AppenderRef ref="RollingFileInfo"/>
+            <AppenderRef ref="RollingFileError"/>
+            <AppenderRef ref="RollingFileELK"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.opay" additivity="false" includeLocation="true">
+            <AppenderRef ref="RollingFileInfo"/>
+            <AppenderRef ref="RollingFileError"/>
+            <AppenderRef ref="RollingFileELK"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+    </Loggers>
+
+</Configuration>
