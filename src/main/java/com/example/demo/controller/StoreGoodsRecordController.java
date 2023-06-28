@@ -2,6 +2,7 @@
 package com.example.demo.controller;
 
 
+import com.example.demo.aop.ThreadPoolExecutorMdcWrapper;
 import com.example.demo.service.StoreGoodsRecordService;
 import com.example.demo.util.MyPage;
 import com.example.demo.vo.StoreGoodsRecordQueryVo;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * <p>

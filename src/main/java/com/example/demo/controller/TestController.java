@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.example.demo.aop.ThreadPoolExecutorMdcWrapper;
 import com.example.demo.retry.TestRetry;
 import com.example.demo.service.Customer2Service;
 import com.example.demo.service.CustomerService;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 
 /**
  * @ClassName TestController
@@ -41,6 +43,9 @@ public class TestController {
     @Autowired
     private Customer2Service customer2Service;
 
+//    @Autowired
+//    private Executor optimizeTaskExecutor;
+
     @GetMapping("/a")
     public String hello(HttpServletRequest request, HttpServletResponse response) throws ExecutionException, InterruptedException {
         String a = "Hello Springboot!";
@@ -48,13 +53,13 @@ public class TestController {
         String contextPath = request.getContextPath();
         log.info("contextPath:{}", contextPath);
         CompletableFuture<Void> cf1 = CompletableFuture.runAsync(() ->
-                System.out.println(Thread.currentThread() + " cf1 do something....")
+                log.info("cf1 do something....:{}", Thread.currentThread())
         );
         CompletableFuture<Void> cf2 = CompletableFuture.runAsync(() ->
-                System.out.println(Thread.currentThread() + " cf2 do something....")
+                log.info("cf2 do something....:{}", Thread.currentThread())
         );
         CompletableFuture<Void> cf3 = CompletableFuture.runAsync(() ->
-                System.out.println(Thread.currentThread() + " cf3 do something....")
+                log.info("cf3 do something....:{}", Thread.currentThread())
         );
         log.info("打印日志 cf1.get:{}", cf1.get());
         log.info("打印日志 cf2.get:{}", cf2.get());
@@ -82,7 +87,7 @@ public class TestController {
 
     @GetMapping("/retry")
     public String retry() {
-        return testRetry.test("111111","222222");
+        return testRetry.test("111111", "222222");
     }
 
     @PostMapping("/find")

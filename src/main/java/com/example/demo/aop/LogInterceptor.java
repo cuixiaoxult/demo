@@ -13,12 +13,12 @@ public class LogInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         //如果有上层调用就用上层的ID
-//        String traceId = request.getHeader(Constants.TRACE_ID);
-//        if (traceId == null) {
-//            traceId = TraceIdUtil.getTraceId();
-//        }
-//
-//        MDC.put(Constants.TRACE_ID, traceId);
+        String traceId = request.getHeader(Constants.TRACE_ID);
+        if (traceId == null) {
+            traceId = TraceIdUtil.getTraceId();
+        }
+
+        MDC.put(Constants.TRACE_ID, traceId);
         return true;
     }
 

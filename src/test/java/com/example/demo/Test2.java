@@ -59,16 +59,16 @@ public class Test2 {
         //String date =  df.format(calendar.getTime());
         //System.out.println(date);
 
-        //List<String> list1 = new ArrayList<>();
-//        list1.add("1");
-//        list1.add("2");
-//        list1.add("3");
-//        List<String> list2 = new ArrayList<>();
-//        //list2.add("1");
-//        //list2.add("2");
-//        //list2.add("3");
-//        boolean bool = list1.retainAll(list2);
-//        System.out.println(list1);
+        List<String> list1 = new ArrayList<>();
+        list1.add("1");
+        list1.add("2");
+        list1.add("3");
+        List<String> list2 = new ArrayList<>();
+        list2.add("3");
+        list2.add("2");
+        list2.add("5");
+        boolean bool = list1.retainAll(list2);
+        System.out.println(list1);
 
         //String s = "{\"Service Provider\": \"#Airtime_Provider+'\\n'+#Mobile Number+'\\n': \"#Mobile_Number\"}";
         //String ss= "{\\"Receiver\\": \\"#counterpartyFullName+\'\\\\n\'+#counterpartyMobile\\"}"
@@ -161,16 +161,16 @@ public class Test2 {
 //        Map<Integer, Optional<Student>> groupMin = studentList.stream()
 //                .collect(Collectors.groupingBy(Student::getAge, Collectors.minBy(Comparator.comparing(Student::getScore))));
 //        System.out.println(groupMin);
-        Map<Integer, Optional<Integer>> result = studentList.stream()
-                .collect(Collectors.groupingBy(Student::getAge, Collectors.mapping(Student::getScore, Collectors.minBy(Integer::compareTo))));
-        Optional<Integer> optionalInteger = result.get(8);
-        Integer score = 0;
-        if (optionalInteger == null || !optionalInteger.isPresent()) {
-            score = -1;
-        } else {
-            score = optionalInteger.get();
-        }
-        System.out.println(score);
+//        Map<Integer, Optional<Integer>> result = studentList.stream()
+//                .collect(Collectors.groupingBy(Student::getAge, Collectors.mapping(Student::getScore, Collectors.minBy(Integer::compareTo))));
+//        Optional<Integer> optionalInteger = result.get(8);
+//        Integer score = 0;
+//        if (optionalInteger == null || !optionalInteger.isPresent()) {
+//            score = -1;
+//        } else {
+//            score = optionalInteger.get();
+//        }
+//        System.out.println(score);
     }
 
     static final List<Student> studentList = Arrays.asList(
