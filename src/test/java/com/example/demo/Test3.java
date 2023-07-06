@@ -43,6 +43,9 @@ public class Test3 {
 //        for (int i = 0; i < 3; i++) {
 //            System.out.println("i的值是:"+i);
 //        }
-        System.out.println(Arrays.stream("56".split("\\|")).map(Integer::valueOf).collect(Collectors.toList()));
+        //System.out.println(Arrays.stream("56".split("\\|")).map(Integer::valueOf).collect(Collectors.toList()));
+
+        String str = "+2348057989581";
+        System.out.println(str.length());
     }
 }

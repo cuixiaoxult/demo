@@ -5,8 +5,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
 import com.example.demo.util.ReceiptStrUtils;
 import com.example.demo.vo.AccountDetail;
+import com.mysql.cj.util.DnsSrv;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.omg.CORBA.PUBLIC_MEMBER;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
@@ -59,16 +61,16 @@ public class Test2 {
         //String date =  df.format(calendar.getTime());
         //System.out.println(date);
 
-        List<String> list1 = new ArrayList<>();
-        list1.add("1");
-        list1.add("2");
-        list1.add("3");
-        List<String> list2 = new ArrayList<>();
-        list2.add("3");
-        list2.add("2");
-        list2.add("5");
-        boolean bool = list1.retainAll(list2);
-        System.out.println(list1);
+//        List<String> list1 = new ArrayList<>();
+//        list1.add("1");
+//        list1.add("2");
+//        list1.add("3");
+//        List<String> list2 = new ArrayList<>();
+//        list2.add("3");
+//        list2.add("2");
+//        list2.add("5");
+//        boolean bool = list1.retainAll(list2);
+//        System.out.println(list1);
 
         //String s = "{\"Service Provider\": \"#Airtime_Provider+'\\n'+#Mobile Number+'\\n': \"#Mobile_Number\"}";
         //String ss= "{\\"Receiver\\": \\"#counterpartyFullName+\'\\\\n\'+#counterpartyMobile\\"}"
@@ -171,6 +173,41 @@ public class Test2 {
 //            score = optionalInteger.get();
 //        }
 //        System.out.println(score);
+//        String str = "+2348057989588";
+//        int length = str.length();
+//        String lastTwoChars = str.substring(length-10);
+//        System.out.println(lastTwoChars);
+
+        String okashUserBvn = "+2348057989582";
+        List<String> otherMdns = new ArrayList<>();
+        otherMdns.add("+2348057989581");
+        otherMdns.add("+2348057989582");
+        otherMdns.add("+2348057989583");
+        otherMdns.add("08057989582");
+        otherMdns.add("null");
+        Map<String,String> map = otherMdns.stream().filter(p->p.length()>9).collect(Collectors.toMap(p->p.substring(p.length()-10), p->p,(p1,p2)->p1));
+//        String bvnMobileSub = okashUserBvn.substring(okashUserBvn.length()-10);
+//        for (String otherMdn : otherMdns) {
+//            String otherMdnSub = otherMdn.substring(otherMdn.length()-10);
+//            System.out.println("otherMdnSub:"+otherMdnSub);
+//            if(bvnMobileSub.equals(otherMdnSub)){
+//                otherMdns.remove(otherMdn);
+//                break;
+//            }
+//        }
+        Collection<String> coll = map.values();
+        if(!CollectionUtils.isEmpty(coll)){
+            String userMdnSub = okashUserBvn.substring(okashUserBvn.length()-10);
+            for (String disOtherMdn : coll) {
+                String disOtherMdnSub = disOtherMdn.substring(disOtherMdn.length()-10);
+                if(userMdnSub.equals(disOtherMdnSub)){
+                    coll.remove(disOtherMdn);
+                    break;
+                }
+            }
+        }
+        System.out.println(coll);
+
     }
 
     static final List<Student> studentList = Arrays.asList(
