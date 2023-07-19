@@ -46,6 +46,27 @@ public class TestController {
 //    @Autowired
 //    private Executor optimizeTaskExecutor;
 
+    @GetMapping("/")
+    public String index(HttpServletRequest request, HttpServletResponse response) throws ExecutionException, InterruptedException {
+        String a = "Hello Springboot!";
+        log.info("打印日志info:{}", a);
+        String contextPath = request.getContextPath();
+        log.info("contextPath:{}", contextPath);
+        CompletableFuture<Void> cf1 = CompletableFuture.runAsync(() ->
+                log.info("cf1 do something....:{}", Thread.currentThread())
+        );
+        CompletableFuture<Void> cf2 = CompletableFuture.runAsync(() ->
+                log.info("cf2 do something....:{}", Thread.currentThread())
+        );
+        CompletableFuture<Void> cf3 = CompletableFuture.runAsync(() ->
+                log.info("cf3 do something....:{}", Thread.currentThread())
+        );
+        log.info("打印日志 cf1.get:{}", cf1.get());
+        log.info("打印日志 cf2.get:{}", cf2.get());
+        log.info("打印日志 cf3.get:{}", cf3.get());
+        return a;
+    }
+
     @GetMapping("/a")
     public String hello(HttpServletRequest request, HttpServletResponse response) throws ExecutionException, InterruptedException {
         String a = "Hello Springboot!";
