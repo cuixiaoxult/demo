@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -28,7 +30,7 @@ public class CompletableFutureTest {
 //        }
 //        System.out.println("总耗时t2：" + t2+"ms");
         //Long start = System.currentTimeMillis();
-        CompletableFutureTest completableFutureTest = new CompletableFutureTest();
+        //CompletableFutureTest completableFutureTest = new CompletableFutureTest();
         //String result = completableFutureTest.getSupplyAsyncSingle();
         //String result = completableFutureTest.getThenCombine();
 //        System.out.println("cf1结果->" + result+":"+(System.currentTimeMillis() - start)+"ms");
@@ -41,7 +43,11 @@ public class CompletableFutureTest {
         //CompletableFuture<Integer> future= completableFutureTest.getCompletableFuture();
 //        Integer s1 = future1.get();
 //        System.out.println("总耗时1 s1："+s1 + (System.currentTimeMillis() - start)+"ms");
-        completableFutureTest.thenCombine();
+        //completableFutureTest.thenCombine();
+        CompletableFutureTest test = new CompletableFutureTest();
+        Long time = System.currentTimeMillis();
+        test.handle();
+        System.out.println(System.currentTimeMillis()-time);
 
     }
 
@@ -57,10 +63,35 @@ public class CompletableFutureTest {
     public void supplyAsync() throws ExecutionException, InterruptedException {
         CompletableFuture<String> cf = CompletableFuture.supplyAsync(() -> {
             System.out.println(Thread.currentThread() + " cf do something....");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             return "result";
+        });
+        CompletableFuture<String> cf2 = CompletableFuture.supplyAsync(() -> {
+            System.out.println(Thread.currentThread() + " cf do something....");
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            return "result2";
+        });
+        CompletableFuture<String> cf3 = CompletableFuture.supplyAsync(() -> {
+            System.out.println(Thread.currentThread() + " cf do something....");
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            return "result3";
         });
         //等待任务执行完成
         System.out.println("结果->" + cf.get());
+        System.out.println("结果2->" + cf2.get());
+        System.out.println("结果3->" + cf3.get());
     }
 
     /**

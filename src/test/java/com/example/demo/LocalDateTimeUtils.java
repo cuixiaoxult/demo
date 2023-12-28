@@ -8,6 +8,8 @@ public class LocalDateTimeUtils {
 
     public static void main(String[] args) {
         LocalDateTime date = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
-        System.out.println(date);
+
+        //LocalDateTime.now().plusSeconds(24 * 3600 * 3);
+        System.out.println(LocalDateTime.now().plusSeconds(24 * 3600 * 3));
     }
 }

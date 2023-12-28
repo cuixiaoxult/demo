@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Test2 {
     public static void main(String[] args) throws InterruptedException {
@@ -178,14 +179,14 @@ public class Test2 {
 //        String lastTwoChars = str.substring(length-10);
 //        System.out.println(lastTwoChars);
 
-        String okashUserBvn = "+2348057989582";
-        List<String> otherMdns = new ArrayList<>();
-        otherMdns.add("+2348057989581");
-        otherMdns.add("+2348057989582");
-        otherMdns.add("+2348057989583");
-        otherMdns.add("08057989582");
-        otherMdns.add("null");
-        Map<String,String> map = otherMdns.stream().filter(p->p.length()>9).collect(Collectors.toMap(p->p.substring(p.length()-10), p->p,(p1,p2)->p1));
+//        String okashUserBvn = "+2348057989582";
+//        List<String> otherMdns = new ArrayList<>();
+//        otherMdns.add("+2348057989581");
+//        otherMdns.add("+2348057989582");
+//        otherMdns.add("+2348057989583");
+//        otherMdns.add("08057989582");
+//        otherMdns.add("null");
+//        Map<String,String> map = otherMdns.stream().filter(p->p.length()>9).collect(Collectors.toMap(p->p.substring(p.length()-10), p->p,(p1,p2)->p1));
 //        String bvnMobileSub = okashUserBvn.substring(okashUserBvn.length()-10);
 //        for (String otherMdn : otherMdns) {
 //            String otherMdnSub = otherMdn.substring(otherMdn.length()-10);
@@ -195,19 +196,29 @@ public class Test2 {
 //                break;
 //            }
 //        }
-        Collection<String> coll = map.values();
-        if(!CollectionUtils.isEmpty(coll)){
-            String userMdnSub = okashUserBvn.substring(okashUserBvn.length()-10);
-            for (String disOtherMdn : coll) {
-                String disOtherMdnSub = disOtherMdn.substring(disOtherMdn.length()-10);
-                if(userMdnSub.equals(disOtherMdnSub)){
-                    coll.remove(disOtherMdn);
-                    break;
-                }
-            }
-        }
-        System.out.println(coll);
+//        Collection<String> coll = map.values();
+//        if(!CollectionUtils.isEmpty(coll)){
+//            String userMdnSub = okashUserBvn.substring(okashUserBvn.length()-10);
+//            for (String disOtherMdn : coll) {
+//                String disOtherMdnSub = disOtherMdn.substring(disOtherMdn.length()-10);
+//                if(userMdnSub.equals(disOtherMdnSub)){
+//                    coll.remove(disOtherMdn);
+//                    break;
+//                }
+//            }
+//        }
+//        System.out.println(coll);
 
+//        List<String> list = Arrays.asList("m,k,l,a", "m,1,3,5,7,7");
+//        List<String> listNew = list.stream().flatMap(s -> {
+//            // 将每个元素转换成一个stream
+//            String[] split = s.split(",");
+//            Stream<String> s2 = Arrays.stream(split);
+//            return s2;
+//        }).distinct().collect(Collectors.toList());
+//        System.out.println(listNew);
+        Map<String,Integer> map = studentList.stream().filter(p->p.getScore()!=null).collect(Collectors.toMap(Student::getName, Student::getScore, (p1, p2) -> p2));
+        System.out.println(map);
     }
 
     static final List<Student> studentList = Arrays.asList(
@@ -216,8 +227,8 @@ public class Test2 {
             new Student("S3", 8, 85),
             new Student("S4", 8, 90),
             new Student("S5", 9, 95),
-            new Student("S6", 9, 85),
-            new Student("S7", 9, 90)
+            new Student("S6", 9, 80),
+            new Student("S7", 9, null)
     );
 
     /**

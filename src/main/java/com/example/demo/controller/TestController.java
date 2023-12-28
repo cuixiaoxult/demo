@@ -11,8 +11,10 @@ import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
@@ -42,6 +44,9 @@ public class TestController {
 
     @Autowired
     private Customer2Service customer2Service;
+
+    @Resource(name = "asyncServiceExecutor")
+    private AsyncTaskExecutor asyncServiceExecutor;
 
 //    @Autowired
 //    private Executor optimizeTaskExecutor;
@@ -112,8 +117,14 @@ public class TestController {
     }
 
     @PostMapping("/find")
-    public void find() throws ExecutionException, InterruptedException {
-        customerService.find();
+    public void find() {
+        List<CompletableFuture<Void>> completableFutureList = new ArrayList<>(512);
+        for (int i = 0; i < 10; i++) {
+            CompletableFuture<Void> cf = CompletableFuture.runAsync(()-> System.out.println(Thread.currentThread().getName()),asyncServiceExecutor);
+            completableFutureList.add(cf);
+        }
+        CompletableFuture<Void> allCf = CompletableFuture.allOf(completableFutureList.toArray(new CompletableFuture[0]));
+        allCf.join();
     }
 
     @PostMapping("/find2")
