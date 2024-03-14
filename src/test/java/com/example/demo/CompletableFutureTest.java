@@ -46,7 +46,7 @@ public class CompletableFutureTest {
         //completableFutureTest.thenCombine();
         CompletableFutureTest test = new CompletableFutureTest();
         Long time = System.currentTimeMillis();
-        test.handle();
+        test.allOf();
         System.out.println(System.currentTimeMillis()-time);
 
     }

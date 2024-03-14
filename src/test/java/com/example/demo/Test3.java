@@ -2,6 +2,7 @@ package com.example.demo;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
@@ -106,20 +107,36 @@ public class Test3 {
 //        } else {
 //            System.out.println("字符串中没有最后连续数字。");
 //        }
-        String source = "abc123def456xyz789?";
-        String NUM_SUFFIX_REGEX = "^.*\\d$";
-        Pattern NUM_PREFIX_PATTERN = Pattern.compile("(^\\d+)(.*)$");
-        String reverse = StringUtils.reverse(source);
+//        String source = "abc123def456xyz789?";
+//        String NUM_SUFFIX_REGEX = "^.*\\d$";
+//        Pattern NUM_PREFIX_PATTERN = Pattern.compile("(^\\d+)(.*)$");
+//        String reverse = StringUtils.reverse(source);
+//
+//        Matcher matcher = NUM_PREFIX_PATTERN.matcher(reverse);
+//        if (!matcher.find()) {
+//
+//        }
+//        String numStr = matcher.group(1);
+//        reverse = reverse.replaceFirst(numStr, StringUtils.EMPTY);
+//
+//        String str = StringUtils.reverse(reverse);
+//        System.out.println(str);
 
-        Matcher matcher = NUM_PREFIX_PATTERN.matcher(reverse);
-        if (!matcher.find()) {
-
-        }
-        String numStr = matcher.group(1);
-        reverse = reverse.replaceFirst(numStr, StringUtils.EMPTY);
-
-        String str = StringUtils.reverse(reverse);
-        System.out.println(str);
+        List<String> names = Lists.newArrayList();
+        names.add("张三");
+        names.add("张三1");
+        names.add("张三2");
+        //printList(names);
+        names.forEach(System.out::println);
 
     }
+
+    public static void printList(List<?> list) {
+        for (Object elem : list)
+            System.out.println(elem + " ");
+        System.out.println();
+    }
+
+
+
 }
